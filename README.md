@@ -1,0 +1,1 @@
+1. url =https://randomuser.me/api/ dan barcha man va womenlarni people papkasiga saqlab oling 2. people papkasidagi rasmlarni emails.csv ga yuboring.
