@@ -1,4 +1,5 @@
 import csv
+import logging
 import os
 import smtplib
 import threading
@@ -8,8 +9,11 @@ import requests
 
 from passwords import password
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-def images():
+
+def download_images():
     folder_path = "peoples"
     os.makedirs(folder_path, exist_ok=True)
 
@@ -26,28 +30,28 @@ def images():
 
                 with open(image_filename, "wb") as image_file:
                     image_file.write(response.content)
-                print(f"{gender} {i} rasm saqlandi.")
+                logger.info(f"{gender} {i} rasm saqlandi.")
             except requests.exceptions.RequestException as e:
-                print(f"{gender} {i} rasmni yuklab bolmadi. Xatolik: {e}")
+                logger.error(f"{gender} {i} rasmni yuklab bolmadi. Xatolik: {e}")
 
-    print("Barcha rasmlar yuklandi.")
+    logger.info("Barcha rasmlar yuklandi.")
 
 
-def send_email_function(send_email, reciever_emails, password, subject, content_urls):
+def send_email_function(send_email, receiver_emails, password, subject, content_urls):
     server = "smtp.gmail.com"
     msg = EmailMessage()
     msg["From"] = send_email
-    msg["To"] = reciever_emails
+    msg["To"] = receiver_emails
     msg["Subject"] = subject
 
     for file in content_urls:
         with open(file, "rb") as f:
             msg.add_attachment(f.read(), maintype="image", subtype="jpeg", filename=f.name.split("/")[-1])
 
-    with smtplib.SMTP_SSL(server, 465) as server:
-        server.login(send_email, password)
-        server.send_message(msg)
-        print("Xabar jo'natildi :) {0}".format(" ".join(reciever_emails)))
+    with smtplib.SMTP_SSL(server, 465) as smtp_server:
+        smtp_server.login(send_email, password)
+        smtp_server.send_message(msg)
+        logger.info("Xabar jo'natildi :) {0}".format(" ".join(receiver_emails)))
 
 
 def send_email():
@@ -59,13 +63,22 @@ def send_email():
 
     with open("emails.csv", "r") as f:
         reader = csv.DictReader(f)
-        emails = [row['email'].strip() for row in reader]
-    send_email_function(send_email="hakimjonovjahongir0@gmail.com", password=password, reciever_emails=emails,
-                        subject="Yangi rasmlar", content_urls=images)
+        emails = [row['emails'].strip() for row in reader]
+
+    send_email_function(
+        send_email="hakimjonovjahongir0@gmail.com",
+        password=password,
+        receiver_emails=emails,
+        subject="Yangi rasmlar",
+        content_urls=images
+    )
 
 
 if __name__ == '__main__':
-    thread = threading.Thread(target=images)
-    thread.start()
-    thread.join()
-    send_email()
+    try:
+        thread = threading.Thread(target=download_images)
+        thread.start()
+        thread.join()
+        send_email()
+    except Exception as e:
+        logger.exception("An unexpected error occurred: %s", e)
