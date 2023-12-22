@@ -86,9 +86,9 @@ async def send_email():
             content_urls=images
         )
     except FileNotFoundError:
-        logger.error("Emails file not found.")
+        logger.error("Email fayli topilmadi.")
     except Exception as e:
-        logger.exception("An unexpected error occurred while reading the emails file: %s", e)
+        logger.exception("Elektron pochta faylini o'qishda kutilmagan xatolik yuz berdi: %s", e)
 
 
 if __name__ == '__main__':
@@ -96,4 +96,4 @@ if __name__ == '__main__':
         asyncio.run(download_images())
         asyncio.run(send_email())
     except Exception as e:
-        logger.exception("An unexpected error occurred: %s", e)
+        logger.exception("Kutilmagan xatolik yuz berdi: %s", e)
